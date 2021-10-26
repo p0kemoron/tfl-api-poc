@@ -5,11 +5,13 @@ RUN pip install -U pip && pip install -r requirements.txt
 
 COPY ./v1 /app/v1
 COPY ./bin /app/bin
-COPY sqlite_setup.sql /app/sqlite_setup.sql
+COPY tfl.db /app/tfl.db
 WORKDIR /app
 
-RUN useradd demo
-USER demo
+
+RUN useradd flask
+RUN chown -vR flask . 
+USER flask
 
 EXPOSE 8080
 

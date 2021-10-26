@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
-sqlite3 tfl.db < sqlite_setup.sql
+# sqlite3 tfl.db < sqlite_setup.sql
 gunicorn wsgi:app --bind 0.0.0.0:8080 --log-level=debug --workers=4

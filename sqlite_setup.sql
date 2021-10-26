@@ -6,4 +6,9 @@ CREATE TABLE IF NOT EXISTS TASKS (
     lines TEXT NULL,
     task_status TEXT NOT NULL,
     tfl_resp TEXT NULL
-)
+);
+
+INSERT INTO TASKS VALUES
+    (1,'demo','2021',NULL,'central','demo','resp_1'),
+    (2,'demo','2021',NULL,'central','demo','resp_2'),
+    (3,'demo','2021',NULL,'central','demo','resp_3');
