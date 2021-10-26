@@ -1,7 +1,7 @@
 from flask import Flask, Response, jsonify, request
 from flask.helpers import make_response
 import requests
-from utils import *
+from .utils import *
 
 app = Flask(__name__)
 
