@@ -94,7 +94,6 @@ def update_task(schedule_time,lines):
     conn = get_db()    
     if schedule_time:
         update_query += "schedule_time = ? " + query_suffix
-        print(update_query)
         try:
             conn.execute(update_query,(schedule_time,task_id,))
             conn.commit()
@@ -102,8 +101,8 @@ def update_task(schedule_time,lines):
             conn.rollback()
             return {"responseErrorText": f"Couldn't update task {task_id}"}, 500
     if lines:
+        
         update_query += "lines = ? " + query_suffix
-        print(update_query)
         try:
             conn.execute(update_query,(lines,task_id,))
             conn.commit()
