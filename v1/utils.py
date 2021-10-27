@@ -87,7 +87,7 @@ def del_specific_task(task_id):
     return resp, status
 
 
-def update_task(schedule_time,lines):
+def update_task(schedule_time,lines,task_id):
     update_query = f"UPDATE {TABLE_NAME} set "
     query_suffix = "where task_id = ?"
     
