@@ -1,4 +1,5 @@
-from datetime import datetime as dt
+from datetime import timezone, datetime as dt
+from apscheduler.schedulers.background import BackgroundScheduler
 import hashlib
 import sqlite3
 import requests
@@ -18,6 +19,9 @@ TABLE_COLS = [
 ]
 INPUT_DATE_FORMAT = "%Y-%m-%dT%H:%M:%S"
 
+# Scheduler configuration
+scheduler = BackgroundScheduler(timzone=timezone.utc)
+scheduler.start()
 
 def get_db():
     return sqlite3.connect(DBNAME)
@@ -94,7 +98,6 @@ def update_task(schedule_time,lines,task_id):
     conn = get_db()    
     if schedule_time:
         sch_query = update_query + " schedule_time = ? " + query_suffix
-        print(sch_query)
         try:
             conn.execute(sch_query,(schedule_time,task_id,))
             conn.commit()
@@ -103,7 +106,6 @@ def update_task(schedule_time,lines,task_id):
             return {"responseErrorText": f"Couldn't update task {task_id}"}, 500
     if lines:
         line_query = update_query + " lines = ? " + query_suffix
-        print(line_query)
         try:
             conn.execute(line_query,(lines,task_id,))
             conn.commit()
@@ -125,25 +127,26 @@ def create_new_task(schedule_time, lines):
     if lines is None:
         return {"responseErrorText": "Invalid input: lines can't be empty"}, 400
 
-    try:
-        schd_stmp = dt.strptime(schedule_time, INPUT_DATE_FORMAT)
-    except:
-        return {"responseErrorText": "Invalid input: invalid date format"}, 400
-
-    task_type = "scheduled"
-
-    # Fetch TFL data
-    tfl_resp, task_status = get_tfl_resp(lines)
+    if schedule_time:
+        try:
+            schd_stmp = dt.strptime(schedule_time, INPUT_DATE_FORMAT)
+        except:
+            return {"responseErrorText": "Invalid input: invalid date format"}, 400
+        task_type = "scheduled"
+        scheduler.add_job(get_tfl_resp, trigger='date',
+                        next_run_time=str(schd_stmp), args=[lines])
+    else:
+        # Fetch TFL data
+        tfl_resp, task_status = get_tfl_resp(lines)
 
     insert_query = f"""INSERT INTO {TABLE_NAME} VALUES \
         ("{task_id}", "{task_type}", "{request_time}", ?, ?, "{task_status}", "{tfl_resp}") \
         """
+    conn = get_db()
     try:
-        conn = get_db()
-        print(insert_query)
         conn.execute(insert_query,(schedule_time,lines,))
         conn.commit()
-        resp, status = {"responseText": f"Task {task_id} created"}, 200
+        resp, status = get_specific_task(task_id)
     except:
         conn.rollback()
         resp, status = {"responseErrorText": f"Couldn't create task {task_id}"}, 500

@@ -1,6 +1,5 @@
 from flask import Flask, Response, jsonify, request
 from flask.helpers import make_response
-import requests
 from .utils import *
 
 app = Flask(__name__)
@@ -34,8 +33,6 @@ def api_delete_task(task_id):
 def api_update_task(task_id):
     schedule_time = request.form.get('schedule_time')
     lines = request.form.get('lines')
-    print(schedule_time)
-    print(lines)
     
     resp, status = update_task(schedule_time,lines,task_id)
     return make_response(jsonify(resp), status)
