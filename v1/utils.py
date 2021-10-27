@@ -41,6 +41,16 @@ def get_tfl_resp(lines):
     return req.text, task_status
 
 
+def sch_tfl_resp(lines,task_id):
+    tfl_resp, task_status = get_tfl_resp(lines)
+    update_query = f"""UPDATE {TABLE_NAME} set task_status={task_status}, \
+        tfl_resp={tfl_resp} where task_id={task_id}"""
+    conn=get_db()
+    conn.execute(update_query)
+    conn.commit()
+
+
+
 def get_tasks():
     tasks = []
     try:
@@ -133,8 +143,8 @@ def create_new_task(schedule_time, lines):
         except:
             return {"responseErrorText": "Invalid input: invalid date format"}, 400
         task_type = "scheduled"
-        scheduler.add_job(get_tfl_resp, trigger='date',
-                        next_run_time=str(schd_stmp), args=[lines])
+        scheduler.add_job(sch_tfl_resp, trigger='date',
+                        next_run_time=str(schd_stmp), args=[lines,task_id])
     else:
         # Fetch TFL data
         tfl_resp, task_status = get_tfl_resp(lines)
