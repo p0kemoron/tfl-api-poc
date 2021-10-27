@@ -89,23 +89,23 @@ def del_specific_task(task_id):
 
 def update_task(schedule_time,lines,task_id):
     update_query = f"UPDATE {TABLE_NAME} set "
-    query_suffix = "where task_id = ?"
+    query_suffix = " where task_id = ?"
     
     conn = get_db()    
     if schedule_time:
-        update_query += "schedule_time = ? " + query_suffix
-        print(update_query)
+        sch_query = update_query + " schedule_time = ? " + query_suffix
+        print(sch_query)
         try:
-            conn.execute(update_query,(schedule_time,task_id,))
+            conn.execute(sch_query,(schedule_time,task_id,))
             conn.commit()
         except:
             conn.rollback()
             return {"responseErrorText": f"Couldn't update task {task_id}"}, 500
     if lines:
-        update_query += "lines = ? " + query_suffix
-        print(update_query)
+        line_query = update_query + " lines = ? " + query_suffix
+        print(line_query)
         try:
-            conn.execute(update_query,(lines,task_id,))
+            conn.execute(line_query,(lines,task_id,))
             conn.commit()
         except:
             conn.rollback()
