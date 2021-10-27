@@ -5,7 +5,7 @@ import sqlite3
 from flask.globals import request
 
 # Add constants
-DBNAME = "../tfl.db"
+DBNAME = "/app/tfl.db"
 TABLE_NAME = "tasks"
 TABLE_COLS = [
     "task_id",
@@ -47,10 +47,10 @@ def get_tasks():
         task_list = cur.fetchall()
         for item in task_list:
             task = {k: item[k] for k in item.keys()}
-        tasks.append(task)
+            tasks.append(task)
         resp, status = tasks, 200
     except:
-        resp, status = [{"responseErrorText": "Couldn't fetch reqd info"}], 503
+        resp, status = [{"responseErrorText": "Couldn't fetch reqd info"}], 500
     return resp, status
 
 
@@ -82,63 +82,58 @@ def del_specific_task(task_id):
         resp, status = {"responseText": f"Task {task_id} deleted"}, 200
     except:
         conn.rollback()
-        resp, status = {"responseErrorText": f"Couldn't delete task {task_id}"}, 503
+        resp, status = {"responseErrorText": f"Couldn't delete task {task_id}"}, 500
     conn.close()
     return resp, status
 
 
-def update_task(task_info):
-    if "task_id" not in task_info.keys():
-        return {"responseErrorText": f"Invalid input"}, 400
+def update_task(schedule_time,lines,task_id):
+    update_query = f"UPDATE {TABLE_NAME} set "
     query_suffix = "where task_id = ?"
+    
+    if task_id is None:
+        return {"responseErrorText": f"Invalid input"}, 400
+    
 
-    if any(["schedule_time", "lines"]) in task_info.keys():
-        update_query = f"UPDATE {TABLE_NAME} set "
-        if "schedule_time" in task_info.keys():
-            schedule_time = task_info["schedule_time"]
-            update_query += "schedule_time = ? " + query_suffix
-            try:
-                conn = get_db()
-                conn.execute(update_query,(schedule_time,task_info["task_id"],))
-                conn.commit()
-            except:
-                conn.rollback()
-                return {"responseErrorText": f"Couldn't update task {task_info}"}, 503
-        if "lines" in task_info.keys():
-            lines = task_info["lines"]
-            update_query += "lines = ? " + query_suffix
-            try:
-                conn = get_db()
-                conn.execute(update_query,(schedule_time,task_info["task_id"],))
-                conn.commit()
-            except:
-                conn.rollback()
-                return {"responseErrorText": f"Couldn't update task {task_info}"}, 503
-        conn.close()
-        return get_specific_task(task_info["task_id"])
+    conn = get_db()    
+    if schedule_time:
+        update_query += "schedule_time = ? " + query_suffix
+        try:
+            conn.execute(update_query,(schedule_time,task_id,))
+            conn.commit()
+        except:
+            conn.rollback()
+            return {"responseErrorText": f"Couldn't update task {task_id}"}, 500
+    if lines:
+        
+        update_query += "lines = ? " + query_suffix
+        try:
+            conn.execute(update_query,(lines,task_id,))
+            conn.commit()
+        except:
+            conn.rollback()
+            return {"responseErrorText": f"Couldn't update task {task_id}"}, 500
+    conn.close()
+    return get_specific_task(task_id)
 
 
-def create_new_task(req_info):
+def create_new_task(schedule_time, lines):
     # Default task parameters
     task_id = get_task_id()
     task_type = "instant"
     request_time = dt.now().strftime(INPUT_DATE_FORMAT)
     task_status = "scheduled"
-    schedule_time = None
     tfl_resp = None
 
-    if "lines" not in req_info.keys():
+    if lines is None:
         return {"responseErrorText": f"Invalid input"}, 400
-    lines = req_info["lines"]
 
-    if "schedule_time" in req_info.keys():
-        schedule_time = req_info["schedule_time"]
-        try:
-            schd_stmp = dt.strptime("2021-10-26T11:24:02", INPUT_DATE_FORMAT)
-        except:
-            return {"responseErrorText": f"Invalid input"}, 400
+    try:
+        schd_stmp = dt.strptime(schedule_time, INPUT_DATE_FORMAT)
+    except:
+        return {"responseErrorText": f"Invalid input"}, 400
 
-        task_type = "scheduled"
+    task_type = "scheduled"
 
     # Fetch TFL data
     tfl_resp, task_status = get_tfl_resp(lines)
@@ -153,6 +148,6 @@ def create_new_task(req_info):
         resp, status = {"responseText": f"Task {task_id} created"}, 200
     except:
         conn.rollback()
-        resp, status = {"responseErrorText": f"Couldn't delete task {task_id}"}, 503
+        resp, status = {"responseErrorText": f"Couldn't create task {task_id}"}, 500
     conn.close()
     return resp, status

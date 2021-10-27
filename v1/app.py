@@ -6,33 +6,37 @@ from .utils import *
 app = Flask(__name__)
 
 
-@app.route("/tasks", methods=["GET", "POST"])
+@app.route("/v1/tasks", methods=["GET", "POST"])
 def api_tasks():
     if request.method == "GET":
         resp, status = get_tasks()
         return make_response(jsonify(resp), status)
     if request.method == "POST":
-        task_info = request.get_json
-        resp, status = create_new_task(task_info)
+        schedule_time = request.form.get('schedule_times')
+        lines = request.form.get('lines')
+        resp, status = create_new_task(schedule_time,lines)
         return make_response(jsonify(resp), status)
 
 
-@app.route("/tasks/<task_id>", methods=["GET"])
+@app.route("/v1/tasks/<task_id>", methods=["GET"])
 def api_get_task(task_id):
     resp, status = get_specific_task(task_id)
     return make_response(jsonify(resp), status)
 
 
-@app.route("/tasks/<task_id>", methods=["DELETE"])
+@app.route("/v1/tasks/<task_id>", methods=["DELETE"])
 def api_delete_task(task_id):
     resp, status = del_specific_task(task_id)
     return make_response(jsonify(resp), status)
 
 
-@app.route("/tasks/<task_id>", methods=["PATCH"])
-def api_update_task(task_info):
-    task_info = request.get_json()
-    resp, status = update_task(task_info)
+@app.route("/v1/tasks/<task_id>", methods=["PATCH"])
+def api_update_task():
+    schedule_time = request.form.get('schedule_times')
+    lines = request.form.get('lines')
+    task_id = request.form.get('task_id')
+
+    resp, status = update_task(schedule_time,lines,task_id)
     return make_response(jsonify(resp), status)
 
 
