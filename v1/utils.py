@@ -43,12 +43,12 @@ def get_tfl_resp(lines):
 
 def sch_tfl_resp(lines,task_id):
     tfl_resp, task_status = get_tfl_resp(lines)
-    update_query = f"""UPDATE {TABLE_NAME} set task_status={task_status}, \
-        tfl_resp={tfl_resp} where task_id={task_id}"""
+    update_query = f"""UPDATE {TABLE_NAME} set task_status='{task_status}', \
+        tfl_resp='{tfl_resp}' where task_id='{task_id}'"""
     conn=get_db()
     conn.execute(update_query)
     conn.commit()
-
+    return None
 
 
 def get_tasks():
