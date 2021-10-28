@@ -6,7 +6,7 @@ import requests
 
 
 # Add constants
-DBNAME = "/app/tfl.db"
+DBNAME = "tfl.db"
 TABLE_NAME = "tasks"
 TABLE_COLS = [
     "task_id",
